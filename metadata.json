@@ -1,0 +1,6 @@
+{
+  "name": "Pikachu AI",
+  "description": "Educational AI Assistant powered by Gemini. Learn smarter, search concepts, solve problems, and generate study notes.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

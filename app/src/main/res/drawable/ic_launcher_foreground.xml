@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- Styled bolt centered in the safe zone representing Pikachu's swift help -->
+    <path
+        android:fillColor="#212121"
+        android:pathData="M54,22 L36,56 L52,56 L44,86 L72,50 L56,50 Z" />
+    <!-- Sleek inner highlights -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M54,22 L48,50 L52,50 L46,56 L54,56 L44,86 L72,50 Z"
+        android:fillAlpha="0.12" />
+</vector>

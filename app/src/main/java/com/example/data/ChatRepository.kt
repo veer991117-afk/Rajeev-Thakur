@@ -219,7 +219,12 @@ class ChatRepository(private val chatDao: ChatDao) {
             return@withContext aiAnswerText
         } catch (e: Exception) {
             Log.e("ChatRepository", "Error getting response from Gemini", e)
-            val errorMessage = "Pika-Pika Error: ${e.localizedMessage ?: "Unresolved network connection. Please check your internet or API key."}"
+            
+            val errorMessage = if (e.message?.contains("429") == true) {
+                "Pika-Pika! I'm a little overloaded right now! ⚡ Please take a short break (15-30 seconds) and try again—I'll be ready to help!"
+            } else {
+                "Pika-Pika Error: ${e.localizedMessage ?: "Unresolved network connection. Please check your internet or API key."}"
+            }
             
             // Persist the error as an assistant reply for transparency
             chatDao.insertMessage(

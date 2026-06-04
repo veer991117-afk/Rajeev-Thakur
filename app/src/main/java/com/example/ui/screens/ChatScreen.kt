@@ -46,8 +46,27 @@ import com.example.ui.theme.ElectricGlow
 import com.example.ui.theme.PikachuOrange
 import com.example.ui.theme.PikachuYellow
 import com.example.viewmodel.ChatViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.*
+
+@Composable
+fun TypewriterText(text: String, modifier: Modifier = Modifier, style: androidx.compose.ui.text.TextStyle = LocalTextStyle.current) {
+    var visibleText by remember(text) { mutableStateOf("") }
+    
+    LaunchedEffect(text) {
+        for (i in 0..text.length) {
+            visibleText = text.substring(0, i)
+            if (i < text.length) delay(5)
+        }
+    }
+    
+    Text(
+        text = visibleText,
+        modifier = modifier,
+        style = style
+    )
+}
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
@@ -472,18 +491,18 @@ fun ChatScreen(
                                                 Card(
                                                     colors = CardDefaults.cardColors(
                                                         containerColor = if (isAssistant) {
-                                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.4f)
+                                                            MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.7f)
                                                         } else {
-                                                            PikachuYellow.copy(alpha = 0.15f)
+                                                            PikachuYellow.copy(alpha = 0.25f)
                                                         }
                                                     ),
                                                     shape = RoundedCornerShape(
-                                                        topStart = 16.dp,
-                                                        topEnd = 16.dp,
-                                                        bottomStart = if (isAssistant) 4.dp else 16.dp,
-                                                        bottomEnd = if (isAssistant) 16.dp else 4.dp
+                                                        topStart = 18.dp,
+                                                        topEnd = 18.dp,
+                                                        bottomStart = if (isAssistant) 4.dp else 18.dp,
+                                                        bottomEnd = if (isAssistant) 18.dp else 4.dp
                                                     ),
-                                                    border = if (!isAssistant) BorderStroke(1.dp, PikachuYellow.copy(alpha = 0.4f)) else null
+                                                    border = if (!isAssistant) BorderStroke(1.dp, PikachuYellow.copy(alpha = 0.6f)) else BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant)
                                                 ) {
                                                     Column(modifier = Modifier.padding(14.dp)) {
                                                         // File details if attached
@@ -514,12 +533,24 @@ fun ChatScreen(
                                                             }
                                                         }
 
-                                                        Text(
-                                                            text = message.content,
-                                                            fontSize = 14.sp,
-                                                            lineHeight = 18.sp,
-                                                            color = MaterialTheme.colorScheme.onBackground
-                                                        )
+                                                        if (isAssistant) {
+                                                            TypewriterText(
+                                                                text = message.content,
+                                                                modifier = Modifier,
+                                                                style = MaterialTheme.typography.bodyMedium.copy(
+                                                                    fontSize = 14.sp,
+                                                                    lineHeight = 18.sp,
+                                                                    color = MaterialTheme.colorScheme.onBackground
+                                                                )
+                                                            )
+                                                        } else {
+                                                            Text(
+                                                                text = message.content,
+                                                                fontSize = 14.sp,
+                                                                lineHeight = 18.sp,
+                                                                color = MaterialTheme.colorScheme.onBackground
+                                                            )
+                                                        }
                                                     }
                                                 }
 

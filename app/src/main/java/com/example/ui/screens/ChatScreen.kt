@@ -1,5 +1,8 @@
 package com.example.ui.screens
 
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.speech.tts.TextToSpeech
 import android.text.format.DateUtils
 import android.widget.Toast
@@ -71,6 +74,7 @@ fun ChatScreen(
     var renameInput by remember { mutableStateOf("") }
 
     val drawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val clipboardManager = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
 
     // TextToSpeech initialization
     var tts: TextToSpeech? by remember { mutableStateOf(null) }
@@ -91,6 +95,12 @@ fun ChatScreen(
         }
     }
 
+    fun copyToClipboard(text: String) {
+        val clip = ClipData.newPlainText("Pikachu AI Response", text)
+        clipboardManager.setPrimaryClip(clip)
+        Toast.makeText(context, "Copied to clipboard! ⚡", Toast.LENGTH_SHORT).show()
+    }
+
     fun speak(text: String) {
         if (isTtsReady && tts != null) {
             // strip simple markdown characters before speaking for clean voice output
@@ -98,6 +108,8 @@ fun ChatScreen(
                 .replace("*", "")
                 .replace("#", "")
                 .replace("`", "")
+            tts?.setPitch(1.2f) // Slightly higher pitch for a "sweet girl" sound
+            tts?.setSpeechRate(1.0f) // Normal speed
             tts?.speak(cleanText, TextToSpeech.QUEUE_FLUSH, null, null)
             Toast.makeText(context, "Speaking: Pika-pika! ⚡", Toast.LENGTH_SHORT).show()
         } else {
@@ -535,6 +547,17 @@ fun ChatScreen(
                                                                 modifier = Modifier.size(12.dp)
                                                             )
                                                         }
+                                                    }
+                                                    IconButton(
+                                                        onClick = { copyToClipboard(message.content) },
+                                                        modifier = Modifier.size(20.dp)
+                                                    ) {
+                                                        Icon(
+                                                            imageVector = Icons.Default.ContentCopy,
+                                                            contentDescription = "Copy text",
+                                                            tint = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.5f),
+                                                            modifier = Modifier.size(12.dp)
+                                                        )
                                                     }
                                                 }
                                             }

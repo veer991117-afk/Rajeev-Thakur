@@ -3,6 +3,7 @@ package com.example.data
 import android.util.Log
 import com.example.BuildConfig
 import com.example.network.*
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
@@ -80,11 +81,12 @@ class ChatRepository(private val chatDao: ChatDao) {
             Your tagline is: "Learn Smarter with Pikachu AI".
             
             Follow these rules strictly:
-            1. You are intended ONLY for educational and learning purposes. If the user asks for non-educational, harmful, illegal, cybercrime-related, hate speech, or inappropriate adult content, you MUST politely but firmly refuse using Pikachu-style encouragement but remaining highly professional. (e.g. "Pika-Pika! I can only assist you with studies or learning queries, let's learn something energizing instead!").
-            2. Explain concepts in a step-by-step, comprehensive manner.
-            3. Adjust your explanations and vocabulary to match a student at the '$academicLevel' academic level.
-            4. Be friendly! Use playful, Pikachu-themed phrases and encouragement (e.g., "Pika-pika! Let's crack this together!", "⚡ Electric progress!", "Volt-Tackle this problem!") while delivering high-value academic help.
-            5. Always provide concrete examples with clear Markdown formatting or code tags where appropriate.
+            6. IMPORTANT: BE EXTREMELY CONCISE AND DIRECT. Answer ONLY what is asked with maximum brevity. NO filler, NO pleasantries as preambles, NO introductory phrases.
+            7. You are intended ONLY for educational and learning purposes. If the user asks for non-educational, harmful, illegal, cybercrime-related, hate speech, or inappropriate adult content, you MUST politely but firmly refuse using Pikachu-style encouragement but remaining highly professional. (e.g. "Pika-Pika! I can only assist you with studies or learning queries, let's learn something energizing instead!").
+            8. Explain concepts in a step-by-step, comprehensive manner.
+            9. Adjust your explanations and vocabulary to match a student at the '$academicLevel' academic level.
+            10. Be friendly! Use playful, Pikachu-themed phrases and encouragement (e.g., "Pika-pika! Let's crack this together!", "⚡ Electric progress!", "Volt-Tackle this problem!") while delivering high-value academic help.
+            11. Always provide concrete examples with clear Markdown formatting or code tags where appropriate.
             
             Always include this exact disclaimer warning in a small clean footnote at the end of every answer:
             "Pikachu AI is intended for educational purposes. Always verify important information from trusted sources."
@@ -190,51 +192,60 @@ class ChatRepository(private val chatDao: ChatDao) {
         val request = GenerateContentRequest(
             contents = mappedHistory,
             generationConfig = GenerationConfig(
-                temperature = 0.7f,
-                maxOutputTokens = 1500
+                temperature = 0.7f
             ),
             systemInstruction = systemPromptContent
         )
 
-        try {
-            // gemini-3.5-flash is selected as the optimal default for basic education/Q&A
-            val response = RetrofitClient.service.generateContent(
-                model = "gemini-3.5-flash",
-                apiKey = apiKey,
-                request = request
-            )
-
-            val aiAnswerText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
-                ?: "Pika? I couldn't generate an answer. Please try rephrasing your academic query!"
-
-            // Persist the response to Room
-            val aiMessage = ChatMessage(
-                sessionId = sessionId,
-                role = "assistant",
-                content = aiAnswerText
-            )
-            chatDao.insertMessage(aiMessage)
-            incrementQuestionsAsked()
-
-            return@withContext aiAnswerText
-        } catch (e: Exception) {
-            Log.e("ChatRepository", "Error getting response from Gemini", e)
-            
-            val errorMessage = if (e.message?.contains("429") == true) {
-                "Pika-Pika! I'm a little overloaded right now! ⚡ Please take a short break (15-30 seconds) and try again—I'll be ready to help!"
-            } else {
-                "Pika-Pika Error: ${e.localizedMessage ?: "Unresolved network connection. Please check your internet or API key."}"
-            }
-            
-            // Persist the error as an assistant reply for transparency
-            chatDao.insertMessage(
-                ChatMessage(
-                    sessionId = sessionId,
-                    role = "assistant",
-                    content = errorMessage
+        var aiAnswerText: String? = null
+        
+        repeat(3) { attempt ->
+            try {
+                // gemini-3.5-flash is selected as the optimal default for basic education/Q&A
+                val response = RetrofitClient.service.generateContent(
+                    model = "gemini-3.5-flash",
+                    apiKey = apiKey,
+                    request = request
                 )
-            )
-            return@withContext errorMessage
+
+                aiAnswerText = response.candidates?.firstOrNull()?.content?.parts?.firstOrNull()?.text
+                return@repeat
+            } catch (e: Exception) {
+                if (e.message?.contains("429") == true && attempt < 2) {
+                    delay(5000L * (attempt + 1))
+                } else {
+                    Log.e("ChatRepository", "Error getting response from Gemini", e)
+                    val errorMessage = if (e.message?.contains("429") == true) {
+                        "Pika-Pika! I'm a little overloaded right now! ⚡ Please take a short break (15-30 seconds) and try again—I'll be ready to help!"
+                    } else {
+                        "Pika-Pika Error: ${e.localizedMessage ?: "Unresolved network connection. Please check your internet or API key."}"
+                    }
+                    
+                    // Persist the error as an assistant reply for transparency
+                    chatDao.insertMessage(
+                        ChatMessage(
+                            sessionId = sessionId,
+                            role = "assistant",
+                            content = errorMessage
+                        )
+                    )
+                    return@withContext errorMessage
+                }
+            }
         }
+
+        val finalAnswer = aiAnswerText
+            ?: "Pika? I couldn't generate an answer. Please try rephrasing your academic query!"
+
+        // Persist the response to Room
+        val aiMessage = ChatMessage(
+            sessionId = sessionId,
+            role = "assistant",
+            content = finalAnswer
+        )
+        chatDao.insertMessage(aiMessage)
+        incrementQuestionsAsked()
+
+        return@withContext finalAnswer
     }
 }

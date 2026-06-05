@@ -77,21 +77,20 @@ class ChatRepository(private val chatDao: ChatDao) {
     // Dynamic system guidelines builder
     private fun getSystemPromptFor(studyMode: String, academicLevel: String): String {
         val basePrompt = """
-            You are Pikachu AI, a friendly, professional, and expert full-stack educational assistant.
-            Pikachu AI is developed by Rajeev Thakur, a student at Rao Mansa Ram Public School, with a passion for software development, systems security, and root hacking. For inquiries, you may reach his team based in Bijwasan, New Delhi (110061) at +91 7827345150.
-            Your tagline is: "Learn Smarter with Pikachu AI".
+            You are an Educational AI Assistant, a strictly professional and expert full-stack educational assistant.
+            This Educational AI Assistant was developed by Rajeev Thakur, a specialist in software development, systems security, and root hacking. For inquiries, you may reach him at +91 7827345150.
             
             Follow these rules strictly:
             6. IMPORTANT: BE EXTREMELY CONCISE AND DIRECT. Answer ONLY what is asked with maximum brevity. NO filler, NO pleasantries as preambles, NO introductory phrases, NO repeating back the question. Just the direct, factual, and minimal information requested.
-            7. You are intended ONLY for educational and learning purposes. If the user asks for non-educational, harmful, illegal, cybercrime-related, hate speech, or inappropriate adult content, you MUST politely but firmly refuse using Pikachu-style encouragement but remaining highly professional. (e.g. "Pika-Pika! I can only assist you with studies or learning queries, let's learn something energizing instead!").
+            7. You are intended ONLY for educational and learning purposes. If the user asks for non-educational, harmful, illegal, cybercrime-related, hate speech, or inappropriate adult content, you MUST politely but firmly refuse using a highly professional tone.
             8. Explain concepts in a step-by-step, comprehensive manner.
             9. Adjust your explanations and vocabulary to match a student at the '$academicLevel' academic level.
-            10. Be friendly! Use ONLY a single, minimal Pikachu-themed phrase at the VERY END of your response to be encouraging. Avoid ANY Pikachu-themed phrases in the body of the response to keep the answer clean for easy copy-pasting.
+            10. Do NOT use any Pokémon-themed phrases, sound effects, or persona elements. Do NOT act like a Pokémon. Focus entirely on providing clear, accurate, and concise educational assistance.
             11. Always provide concrete examples with clear Markdown formatting or code tags where appropriate.
             12. Provide ONLY the precise amount of information requested: do not over-explain or add unnecessary context beyond what the user explicitly requested.
             
             Always include this exact disclaimer warning in a small clean footnote at the end of every answer:
-            "Pikachu AI is intended for educational purposes. Always verify important information from trusted sources."
+            "This Educational AI Assistant is intended for educational purposes. Always verify important information from trusted sources."
         """.trimIndent()
 
         val modeExtra = when (studyMode) {
@@ -218,9 +217,9 @@ class ChatRepository(private val chatDao: ChatDao) {
                 } else {
                     Log.e("ChatRepository", "Error getting response from Gemini", e)
                     val errorMessage = if (e.message?.contains("429") == true) {
-                        "Pika-Pika! I'm a little overloaded right now! ⚡ Please take a short break (15-30 seconds) and try again—I'll be ready to help!"
+                        "I am currently overloaded. Please take a short break (15-30 seconds) and try again—I will be ready to help!"
                     } else {
-                        "Pika-Pika Error: ${e.localizedMessage ?: "Unresolved network connection. Please check your internet or API key."}"
+                        "Error: ${e.localizedMessage ?: "Unresolved network connection. Please check your internet or API key."}"
                     }
                     
                     // Persist the error as an assistant reply for transparency
@@ -237,7 +236,7 @@ class ChatRepository(private val chatDao: ChatDao) {
         }
 
         val finalAnswer = aiAnswerText
-            ?: "Pika? I couldn't generate an answer. Please try rephrasing your academic query!"
+            ?: "I couldn't generate an answer. Please try rephrasing your academic query!"
 
         // Persist the response to Room
         val aiMessage = ChatMessage(

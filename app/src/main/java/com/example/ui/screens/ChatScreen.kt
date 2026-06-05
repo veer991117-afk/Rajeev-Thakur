@@ -51,10 +51,15 @@ import kotlinx.coroutines.launch
 import java.util.*
 
 @Composable
-fun TypewriterText(text: String, modifier: Modifier = Modifier, style: androidx.compose.ui.text.TextStyle = LocalTextStyle.current) {
-    var visibleText by remember(text) { mutableStateOf("") }
+fun TypewriterText(
+    text: String, 
+    messageId: String,
+    modifier: Modifier = Modifier, 
+    style: androidx.compose.ui.text.TextStyle = LocalTextStyle.current
+) {
+    var visibleText by remember(messageId) { mutableStateOf("") }
     
-    LaunchedEffect(text) {
+    LaunchedEffect(messageId) {
         for (i in 0..text.length) {
             visibleText = text.substring(0, i)
             if (i < text.length) delay(5)
@@ -383,8 +388,8 @@ fun ChatScreen(
             ) { paddingValues ->
                 val listState = rememberLazyListState()
 
-                // Auto Scroll to last message whenever list inserts
-                LaunchedEffect(messages.size, isGenerating) {
+                                                // Auto Scroll to last message whenever list inserts
+                LaunchedEffect(messages.size) {
                     if (messages.isNotEmpty()) {
                         listState.animateScrollToItem(messages.size - 1)
                     }
@@ -536,6 +541,7 @@ fun ChatScreen(
                                                         if (isAssistant) {
                                                             TypewriterText(
                                                                 text = message.content,
+                                                                messageId = message.id.toString(),
                                                                 modifier = Modifier,
                                                                 style = MaterialTheme.typography.bodyMedium.copy(
                                                                     fontSize = 14.sp,
